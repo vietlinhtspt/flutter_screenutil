@@ -19,10 +19,10 @@ class ScreenUtil {
   static bool Function() _enableScaleWH = () => true;
   static bool Function() _enableScaleText = () => true;
 
-
   /// UI设计中手机尺寸 , dp
   /// Size of the phone in UI Design , dp
   late Size _uiSize;
+  double? _maxScaleFactor;
 
   ///屏幕方向
   late Orientation _orientation;
@@ -41,7 +41,8 @@ class ScreenUtil {
   /// if the enableWH return false, the width and the height scale ratio will be 1
   /// if the enableText return false, the text scale ratio will be 1
   ///
-  static void enableScale({bool Function()? enableWH, bool Function()? enableText}) {
+  static void enableScale(
+      {bool Function()? enableWH, bool Function()? enableText}) {
     _enableScaleWH = enableWH ?? () => true;
     _enableScaleText = enableText ?? () => true;
   }
@@ -114,6 +115,7 @@ class ScreenUtil {
     bool? splitScreenMode,
     bool? minTextAdapt,
     FontSizeResolver? fontSizeResolver,
+    double? maxScaleFactor,
   }) {
     try {
       if (data != null)
@@ -142,7 +144,8 @@ class ScreenUtil {
       ..fontSizeResolver = fontSizeResolver ?? _instance.fontSizeResolver
       .._minTextAdapt = minTextAdapt ?? _instance._minTextAdapt
       .._splitScreenMode = splitScreenMode ?? _instance._splitScreenMode
-      .._orientation = orientation;
+      .._orientation = orientation
+      .._maxScaleFactor = maxScaleFactor ?? _instance._maxScaleFactor;
 
     _instance._elementsToRebuild?.forEach((el) => el.markNeedsBuild());
   }
@@ -153,6 +156,7 @@ class ScreenUtil {
     Size designSize = defaultSize,
     bool splitScreenMode = false,
     bool minTextAdapt = false,
+    double? maxScaleFactor,
     FontSizeResolver? fontSizeResolver,
   }) {
     final view = View.maybeOf(context);
@@ -162,6 +166,7 @@ class ScreenUtil {
       splitScreenMode: splitScreenMode,
       minTextAdapt: minTextAdapt,
       fontSizeResolver: fontSizeResolver,
+      maxScaleFactor: maxScaleFactor,
     );
   }
 
@@ -213,15 +218,29 @@ class ScreenUtil {
 
   /// 实际尺寸与UI设计的比例
   /// The ratio of actual width to UI design
-  double get scaleWidth => !_enableScaleWH() ? 1 : screenWidth / _uiSize.width;
+  double get scaleWidth => !_enableScaleWH()
+      ? 1
+      : _maxScaleFactor != null
+          ? min(screenWidth / _uiSize.width, _maxScaleFactor!)
+          : screenWidth / _uiSize.width;
 
   /// The ratio of actual height to UI design
-  double get scaleHeight =>
-      !_enableScaleWH() ? 1 : (_splitScreenMode ? max(screenHeight, 700) : screenHeight) /
-      _uiSize.height;
+  double get scaleHeight => !_enableScaleWH()
+      ? 1
+      : _maxScaleFactor != null
+          ? min(
+              (_splitScreenMode ? max(screenHeight, 700) : screenHeight) /
+                  _uiSize.height,
+              _maxScaleFactor!)
+          : (_splitScreenMode ? max(screenHeight, 700) : screenHeight) /
+              _uiSize.height;
 
-  double get scaleText =>
-      !_enableScaleText() ? 1 : (_minTextAdapt ? min(scaleWidth, scaleHeight) : scaleWidth);
+  double get scaleText => !_enableScaleText()
+      ? 1
+      : _maxScaleFactor != null
+          ? min((_minTextAdapt ? min(scaleWidth, scaleHeight) : scaleWidth),
+              _maxScaleFactor!)
+          : (_minTextAdapt ? min(scaleWidth, scaleHeight) : scaleWidth);
 
   /// 根据UI设计的设备宽度适配
   /// 高度也可以根据这个来做适配可以保证不变形,比如你想要一个正方形的时候.

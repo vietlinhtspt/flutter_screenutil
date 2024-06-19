@@ -78,6 +78,7 @@ class ScreenUtilInit extends StatefulWidget {
     this.enableScaleText,
     this.responsiveWidgets,
     this.excludeWidgets,
+    this.maxScaleFactor,
     this.fontSizeResolver = FontSizeResolvers.width,
   }) : super(key: key);
 
@@ -91,6 +92,7 @@ class ScreenUtilInit extends StatefulWidget {
   final bool Function()? enableScaleText;
   final RebuildFactor rebuildFactor;
   final FontSizeResolver fontSizeResolver;
+  final double? maxScaleFactor;
 
   /// The [Size] of the device in the design draft, in dp
   final Size designSize;
@@ -101,7 +103,8 @@ class ScreenUtilInit extends StatefulWidget {
   State<ScreenUtilInit> createState() => _ScreenUtilInitState();
 }
 
-class _ScreenUtilInitState extends State<ScreenUtilInit> with WidgetsBindingObserver {
+class _ScreenUtilInitState extends State<ScreenUtilInit>
+    with WidgetsBindingObserver {
   final _canMarkedToBuild = HashSet<String>();
   final _excludedWidgets = HashSet<String>();
   MediaQueryData? _mediaQueryData;
@@ -114,7 +117,8 @@ class _ScreenUtilInitState extends State<ScreenUtilInit> with WidgetsBindingObse
       _canMarkedToBuild.addAll(widget.responsiveWidgets!);
     }
 
-    ScreenUtil.enableScale(enableWH: widget.enableScaleWH, enableText: widget.enableScaleText);
+    ScreenUtil.enableScale(
+        enableWH: widget.enableScaleWH, enableText: widget.enableScaleText);
 
     _validateSize().then(_screenSizeCompleter.complete);
 
@@ -187,6 +191,7 @@ class _ScreenUtilInitState extends State<ScreenUtilInit> with WidgetsBindingObse
         splitScreenMode: widget.splitScreenMode,
         minTextAdapt: widget.minTextAdapt,
         fontSizeResolver: widget.fontSizeResolver,
+        maxScaleFactor: widget.maxScaleFactor,
       );
 
       return widget.builder?.call(context, widget.child) ?? widget.child!;
@@ -201,6 +206,7 @@ class _ScreenUtilInitState extends State<ScreenUtilInit> with WidgetsBindingObse
           splitScreenMode: widget.splitScreenMode,
           minTextAdapt: widget.minTextAdapt,
           fontSizeResolver: widget.fontSizeResolver,
+          maxScaleFactor: widget.maxScaleFactor,
         );
 
         if (snapshot.connectionState == ConnectionState.done) {
